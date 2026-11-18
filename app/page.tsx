@@ -7,20 +7,44 @@ export default function Home() {
     <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-6 px-6 py-16">
       <h1 className="text-2xl font-semibold">할 일</h1>
 
-      <form action={createTodoAction} className="flex gap-2">
+      <form action={createTodoAction} className="flex flex-col gap-2">
         <input
           type="text"
           name="title"
           placeholder="할 일을 입력하세요"
           required
-          className="flex-1 rounded border border-black/[.08] px-3 py-2 dark:border-white/[.145]"
+          className="rounded border border-black/[.08] px-3 py-2 dark:border-white/[.145]"
         />
-        <button
-          type="submit"
-          className="rounded bg-foreground px-4 py-2 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc]"
-        >
-          추가
-        </button>
+        <input
+          type="text"
+          name="description"
+          placeholder="설명 (선택)"
+          className="rounded border border-black/[.08] px-3 py-2 dark:border-white/[.145]"
+        />
+        <div className="flex gap-2">
+          <input
+            type="date"
+            name="dueDate"
+            aria-label="마감일"
+            className="flex-1 rounded border border-black/[.08] px-3 py-2 dark:border-white/[.145]"
+          />
+          <select
+            name="priority"
+            defaultValue="medium"
+            aria-label="우선순위"
+            className="rounded border border-black/[.08] px-3 py-2 dark:border-white/[.145]"
+          >
+            <option value="low">낮음</option>
+            <option value="medium">보통</option>
+            <option value="high">높음</option>
+          </select>
+          <button
+            type="submit"
+            className="rounded bg-foreground px-4 py-2 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc]"
+          >
+            추가
+          </button>
+        </div>
       </form>
 
       <Suspense fallback={<TodoListFallback />}>
@@ -46,7 +70,7 @@ async function TodoList() {
       {items.map((todo) => (
         <li
           key={todo.id}
-          className="flex items-center gap-3 rounded border border-black/[.08] px-3 py-2 dark:border-white/[.145]"
+          className="flex items-start gap-3 rounded border border-black/[.08] px-3 py-2 dark:border-white/[.145]"
         >
           <form action={toggleTodoAction.bind(null, todo.id)}>
             <button
@@ -58,15 +82,28 @@ async function TodoList() {
             </button>
           </form>
 
-          <span
-            className={
-              todo.completed
-                ? "flex-1 text-black/40 line-through dark:text-white/40"
-                : "flex-1"
-            }
-          >
-            {todo.title}
-          </span>
+          <div className="flex flex-1 flex-col gap-1">
+            <span
+              className={
+                todo.completed
+                  ? "text-black/40 line-through dark:text-white/40"
+                  : undefined
+              }
+            >
+              {todo.title}
+            </span>
+
+            {todo.description && (
+              <span className="text-sm text-black/60 dark:text-white/60">
+                {todo.description}
+              </span>
+            )}
+
+            <div className="flex gap-2 text-xs text-black/50 dark:text-white/50">
+              <span>{PRIORITY_LABELS[todo.priority]}</span>
+              {todo.dueDate && <span>마감일: {todo.dueDate}</span>}
+            </div>
+          </div>
 
           <form action={deleteTodoAction.bind(null, todo.id)}>
             <button
@@ -81,6 +118,12 @@ async function TodoList() {
     </ul>
   );
 }
+
+const PRIORITY_LABELS: Record<string, string> = {
+  low: "우선순위: 낮음",
+  medium: "우선순위: 보통",
+  high: "우선순위: 높음",
+};
 
 function TodoListFallback() {
   return (
