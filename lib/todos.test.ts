@@ -149,6 +149,64 @@ describe("updateTodo", () => {
   });
 });
 
+describe("listTodos sort order", () => {
+  it("orders incomplete todos by priority descending (high > medium > low)", async () => {
+    await createTodo({ title: "낮음", priority: "low" });
+    await createTodo({ title: "높음", priority: "high" });
+    await createTodo({ title: "보통", priority: "medium" });
+
+    const result = await listTodos();
+
+    expect(result.map((t) => t.title)).toEqual(["높음", "보통", "낮음"]);
+  });
+
+  it("orders same-priority todos by dueDate ascending", async () => {
+    await createTodo({ title: "늦은 마감", priority: "high", dueDate: "2026-12-31" });
+    await createTodo({ title: "빠른 마감", priority: "high", dueDate: "2026-12-01" });
+    await createTodo({ title: "중간 마감", priority: "high", dueDate: "2026-12-15" });
+
+    const result = await listTodos();
+
+    expect(result.map((t) => t.title)).toEqual(["빠른 마감", "중간 마감", "늦은 마감"]);
+  });
+
+  it("sorts todos with no dueDate after ones with a dueDate within the same priority tier", async () => {
+    await createTodo({ title: "마감일 없음", priority: "high" });
+    await createTodo({ title: "마감일 있음", priority: "high", dueDate: "2026-12-01" });
+
+    const result = await listTodos();
+
+    expect(result.map((t) => t.title)).toEqual(["마감일 있음", "마감일 없음"]);
+  });
+
+  it("falls back to createdAt ascending when priority and dueDate are tied", async () => {
+    await createTodo({ title: "먼저 생성", priority: "medium", dueDate: "2026-12-01" });
+    await createTodo({ title: "나중 생성", priority: "medium", dueDate: "2026-12-01" });
+
+    const result = await listTodos();
+
+    expect(result.map((t) => t.title)).toEqual(["먼저 생성", "나중 생성"]);
+  });
+
+  it("applies priority/dueDate/createdAt ordering independently within each completed state", async () => {
+    const lowNoDue = await createTodo({ title: "완료-낮음", priority: "low" });
+    const highLate = await createTodo({ title: "완료-높음-늦은마감", priority: "high", dueDate: "2026-12-31" });
+    await toggleTodo(lowNoDue.id);
+    await toggleTodo(highLate.id);
+    await createTodo({ title: "미완료-보통", priority: "medium" });
+    await createTodo({ title: "미완료-높음-빠른마감", priority: "high", dueDate: "2026-12-01" });
+
+    const result = await listTodos();
+
+    expect(result.map((t) => t.title)).toEqual([
+      "미완료-높음-빠른마감",
+      "미완료-보통",
+      "완료-높음-늦은마감",
+      "완료-낮음",
+    ]);
+  });
+});
+
 describe("deleteTodo", () => {
   it("removes the todo so it no longer appears in listTodos", async () => {
     const created = await createTodo({ title: "지울 항목" });
