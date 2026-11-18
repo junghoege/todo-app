@@ -51,6 +51,41 @@ describe("todoInputSchema", () => {
     });
   });
 
+  describe("description", () => {
+    it("treats a whitespace-only description as omitted (coerces to null)", () => {
+      const result = todoInputSchema.safeParse({
+        title: "할 일",
+        description: "   ",
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.description).toBeNull();
+      }
+    });
+
+    it("trims a valid description", () => {
+      const result = todoInputSchema.safeParse({
+        title: "할 일",
+        description: "  우유, 계란  ",
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.description).toBe("우유, 계란");
+      }
+    });
+
+    it("treats a null description as valid (optional field)", () => {
+      const result = todoInputSchema.safeParse({
+        title: "할 일",
+        description: null,
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.description).toBeNull();
+      }
+    });
+  });
+
   describe("dueDate", () => {
     it("rejects an invalid dueDate format", () => {
       const result = todoInputSchema.safeParse({

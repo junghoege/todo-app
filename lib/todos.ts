@@ -1,6 +1,7 @@
 import { asc, eq, not, sql } from "drizzle-orm";
 import { db } from "./db/client";
 import { todos, type Todo } from "./db/schema";
+import type { TodoInput } from "./todo-input";
 
 const priorityRank = sql`case ${todos.priority} when 'high' then 0 when 'medium' then 1 when 'low' then 2 else 3 end`;
 const dueDateNullsLast = sql`case when ${todos.dueDate} is null then 1 else 0 end`;
@@ -18,12 +19,7 @@ export async function listTodos(): Promise<Todo[]> {
     );
 }
 
-export async function createTodo(input: {
-  title: string;
-  description?: string | null;
-  dueDate?: string | null;
-  priority?: "low" | "medium" | "high";
-}): Promise<Todo> {
+export async function createTodo(input: TodoInput): Promise<Todo> {
   const [created] = await db
     .insert(todos)
     .values({
@@ -36,15 +32,7 @@ export async function createTodo(input: {
   return created;
 }
 
-export async function updateTodo(
-  id: number,
-  input: {
-    title: string;
-    description?: string | null;
-    dueDate?: string | null;
-    priority?: "low" | "medium" | "high";
-  },
-): Promise<Todo> {
+export async function updateTodo(id: number, input: TodoInput): Promise<Todo> {
   const [updated] = await db
     .update(todos)
     .set({

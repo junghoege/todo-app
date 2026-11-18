@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { listTodos } from "@/lib/todos";
+import type { Priority } from "@/lib/db/schema";
 import { deleteTodoAction, toggleTodoAction, updateTodoAction } from "./actions";
 import { AddTodoForm } from "./add-todo-form";
 import { EditTodoForm } from "./edit-todo-form";
@@ -103,7 +104,7 @@ async function TodoList() {
   );
 }
 
-const PRIORITY_LABELS: Record<string, string> = {
+const PRIORITY_LABELS: Record<Priority, string> = {
   low: "우선순위: 낮음",
   medium: "우선순위: 보통",
   high: "우선순위: 높음",
