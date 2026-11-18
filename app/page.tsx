@@ -54,8 +54,13 @@ export default function Home() {
   );
 }
 
+function isOverdue(todo: { completed: boolean; dueDate: string | null }, todayStr: string) {
+  return !todo.completed && !!todo.dueDate && todo.dueDate < todayStr;
+}
+
 async function TodoList() {
   const items = await listTodos();
+  const todayStr = new Date().toISOString().slice(0, 10);
 
   if (items.length === 0) {
     return (
@@ -101,7 +106,18 @@ async function TodoList() {
 
             <div className="flex gap-2 text-xs text-black/50 dark:text-white/50">
               <span>{PRIORITY_LABELS[todo.priority]}</span>
-              {todo.dueDate && <span>마감일: {todo.dueDate}</span>}
+              {todo.dueDate && (
+                <span
+                  className={
+                    isOverdue(todo, todayStr)
+                      ? "font-semibold text-red-600 dark:text-red-400"
+                      : undefined
+                  }
+                >
+                  마감일: {todo.dueDate}
+                  {isOverdue(todo, todayStr) && " (지남)"}
+                </span>
+              )}
             </div>
           </div>
 
