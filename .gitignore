@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+/.vitest-data
 
 # next.js
 /.next/
