@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { Priority } from "./db/schema";
 
 // Plain zod schema for validating todo create/update input. Deliberately has
 // no dependency on `next/cache` or any Next.js request context (unlike
@@ -6,12 +7,16 @@ import { z } from "zod";
 // directly with `safeParse`.
 export const todoInputSchema = z.object({
   title: z.string().trim().min(1, "제목을 입력해주세요."),
+  // `description` is optional, so a whitespace-only value should be treated
+  // the same as an omitted one (coerced to `null`) rather than rejected.
+  // Trimming happens in `preprocess`, before any presence check runs, so an
+  // all-whitespace string can never reach a "too short" validation error.
   description: z
-    .string()
-    .trim()
-    .min(1)
-    .nullable()
-    .optional()
+    .preprocess((value) => {
+      if (typeof value !== "string") return value;
+      const trimmed = value.trim();
+      return trimmed === "" ? null : trimmed;
+    }, z.string().nullable().optional())
     .transform((value) => value ?? null),
   dueDate: z
     .string()
@@ -27,7 +32,18 @@ export const todoInputSchema = z.object({
     .default("medium"),
 });
 
-export type TodoInput = z.infer<typeof todoInputSchema>;
+/**
+ * Shared create/update input shape for `lib/todos.ts`. `title` is required;
+ * the rest mirror `todoInputSchema`'s fields but stay optional here so
+ * callers (both the parsed Server Action output and direct test calls) can
+ * omit them.
+ */
+export type TodoInput = {
+  title: string;
+  description?: string | null;
+  dueDate?: string | null;
+  priority?: Priority;
+};
 
 /** Picks a single human-readable message out of a failed safeParse result. */
 export function firstTodoInputError(error: z.ZodError): string {
