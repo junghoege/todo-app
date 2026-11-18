@@ -24,6 +24,28 @@ export async function createTodo(input: {
   return created;
 }
 
+export async function updateTodo(
+  id: number,
+  input: {
+    title: string;
+    description?: string | null;
+    dueDate?: string | null;
+    priority?: "low" | "medium" | "high";
+  },
+): Promise<Todo> {
+  const [updated] = await db
+    .update(todos)
+    .set({
+      title: input.title,
+      description: input.description ?? null,
+      dueDate: input.dueDate ?? null,
+      ...(input.priority ? { priority: input.priority } : {}),
+    })
+    .where(eq(todos.id, id))
+    .returning();
+  return updated;
+}
+
 export async function toggleTodo(id: number): Promise<Todo> {
   const [toggled] = await db
     .update(todos)
