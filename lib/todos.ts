@@ -1,9 +1,21 @@
-import { asc, eq, not } from "drizzle-orm";
+import { asc, eq, not, sql } from "drizzle-orm";
 import { db } from "./db/client";
 import { todos, type Todo } from "./db/schema";
 
+const priorityRank = sql`case ${todos.priority} when 'high' then 0 when 'medium' then 1 when 'low' then 2 else 3 end`;
+const dueDateNullsLast = sql`case when ${todos.dueDate} is null then 1 else 0 end`;
+
 export async function listTodos(): Promise<Todo[]> {
-  return db.select().from(todos).orderBy(asc(todos.completed), asc(todos.createdAt));
+  return db
+    .select()
+    .from(todos)
+    .orderBy(
+      asc(todos.completed),
+      priorityRank,
+      dueDateNullsLast,
+      asc(todos.dueDate),
+      asc(todos.createdAt),
+    );
 }
 
 export async function createTodo(input: {
@@ -22,6 +34,28 @@ export async function createTodo(input: {
     })
     .returning();
   return created;
+}
+
+export async function updateTodo(
+  id: number,
+  input: {
+    title: string;
+    description?: string | null;
+    dueDate?: string | null;
+    priority?: "low" | "medium" | "high";
+  },
+): Promise<Todo> {
+  const [updated] = await db
+    .update(todos)
+    .set({
+      title: input.title,
+      description: input.description ?? null,
+      dueDate: input.dueDate ?? null,
+      ...(input.priority ? { priority: input.priority } : {}),
+    })
+    .where(eq(todos.id, id))
+    .returning();
+  return updated;
 }
 
 export async function toggleTodo(id: number): Promise<Todo> {
