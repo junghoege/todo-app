@@ -31,6 +31,38 @@ describe("createTodo", () => {
 
     expect(result.map((t) => t.title)).toEqual(["첫 번째", "두 번째"]);
   });
+
+  it("persists optional description, dueDate, and priority", async () => {
+    const created = await createTodo({
+      title: "우유 사기",
+      description: "저지방 우유로",
+      dueDate: "2026-12-01",
+      priority: "high",
+    });
+
+    expect(created).toMatchObject({
+      description: "저지방 우유로",
+      dueDate: "2026-12-01",
+      priority: "high",
+    });
+
+    const result = await listTodos();
+    expect(result[0]).toMatchObject({
+      description: "저지방 우유로",
+      dueDate: "2026-12-01",
+      priority: "high",
+    });
+  });
+
+  it("defaults priority to medium and leaves description/dueDate null when omitted", async () => {
+    const created = await createTodo({ title: "청소하기" });
+
+    expect(created).toMatchObject({
+      description: null,
+      dueDate: null,
+      priority: "medium",
+    });
+  });
 });
 
 describe("toggleTodo", () => {

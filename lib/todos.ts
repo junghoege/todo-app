@@ -6,8 +6,21 @@ export async function listTodos(): Promise<Todo[]> {
   return db.select().from(todos).orderBy(asc(todos.completed), asc(todos.createdAt));
 }
 
-export async function createTodo(input: { title: string }): Promise<Todo> {
-  const [created] = await db.insert(todos).values({ title: input.title }).returning();
+export async function createTodo(input: {
+  title: string;
+  description?: string | null;
+  dueDate?: string | null;
+  priority?: "low" | "medium" | "high";
+}): Promise<Todo> {
+  const [created] = await db
+    .insert(todos)
+    .values({
+      title: input.title,
+      description: input.description ?? null,
+      dueDate: input.dueDate ?? null,
+      ...(input.priority ? { priority: input.priority } : {}),
+    })
+    .returning();
   return created;
 }
 
