@@ -1,55 +1,47 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { createTodo, deleteTodo, toggleTodo, updateTodo } from "@/lib/todos";
+import { firstTodoInputError, todoInputSchema } from "@/lib/todo-input";
 
-const todoFieldsSchema = {
-  title: z.string().trim().min(1),
-  description: z
-    .string()
-    .trim()
-    .min(1)
-    .nullable()
-    .optional()
-    .transform((value) => value ?? null),
-  dueDate: z
-    .string()
-    .trim()
-    .min(1)
-    .nullable()
-    .optional()
-    .transform((value) => value ?? null),
-  priority: z.enum(["low", "medium", "high"]).default("medium"),
-};
+export type TodoActionState = { error: string } | null;
 
-const createTodoSchema = z.object(todoFieldsSchema);
-const updateTodoSchema = z.object(todoFieldsSchema);
-
-export async function createTodoAction(formData: FormData) {
-  const parsed = createTodoSchema.safeParse({
+function parseTodoFormData(formData: FormData) {
+  return todoInputSchema.safeParse({
     title: formData.get("title"),
     description: formData.get("description") || null,
     dueDate: formData.get("dueDate") || null,
     priority: formData.get("priority") || undefined,
   });
-  if (!parsed.success) return;
+}
+
+export async function createTodoAction(
+  _prevState: TodoActionState,
+  formData: FormData,
+): Promise<TodoActionState> {
+  const parsed = parseTodoFormData(formData);
+  if (!parsed.success) {
+    return { error: firstTodoInputError(parsed.error) };
+  }
 
   await createTodo(parsed.data);
   revalidatePath("/");
+  return null;
 }
 
-export async function updateTodoAction(id: number, formData: FormData) {
-  const parsed = updateTodoSchema.safeParse({
-    title: formData.get("title"),
-    description: formData.get("description") || null,
-    dueDate: formData.get("dueDate") || null,
-    priority: formData.get("priority") || undefined,
-  });
-  if (!parsed.success) return;
+export async function updateTodoAction(
+  id: number,
+  _prevState: TodoActionState,
+  formData: FormData,
+): Promise<TodoActionState> {
+  const parsed = parseTodoFormData(formData);
+  if (!parsed.success) {
+    return { error: firstTodoInputError(parsed.error) };
+  }
 
   await updateTodo(id, parsed.data);
   revalidatePath("/");
+  return null;
 }
 
 export async function toggleTodoAction(id: number) {
