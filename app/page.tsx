@@ -1,56 +1,15 @@
 import { Suspense } from "react";
 import { listTodos } from "@/lib/todos";
-import {
-  createTodoAction,
-  deleteTodoAction,
-  toggleTodoAction,
-  updateTodoAction,
-} from "./actions";
+import { deleteTodoAction, toggleTodoAction, updateTodoAction } from "./actions";
+import { AddTodoForm } from "./add-todo-form";
+import { EditTodoForm } from "./edit-todo-form";
 
 export default function Home() {
   return (
     <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-6 px-6 py-16">
       <h1 className="text-2xl font-semibold">할 일</h1>
 
-      <form action={createTodoAction} className="flex flex-col gap-2">
-        <input
-          type="text"
-          name="title"
-          placeholder="할 일을 입력하세요"
-          required
-          className="rounded border border-black/[.08] px-3 py-2 dark:border-white/[.145]"
-        />
-        <input
-          type="text"
-          name="description"
-          placeholder="설명 (선택)"
-          className="rounded border border-black/[.08] px-3 py-2 dark:border-white/[.145]"
-        />
-        <div className="flex gap-2">
-          <input
-            type="date"
-            name="dueDate"
-            aria-label="마감일"
-            className="flex-1 rounded border border-black/[.08] px-3 py-2 dark:border-white/[.145]"
-          />
-          <select
-            name="priority"
-            defaultValue="medium"
-            aria-label="우선순위"
-            className="rounded border border-black/[.08] px-3 py-2 dark:border-white/[.145]"
-          >
-            <option value="low">낮음</option>
-            <option value="medium">보통</option>
-            <option value="high">높음</option>
-          </select>
-          <button
-            type="submit"
-            className="rounded bg-foreground px-4 py-2 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc]"
-          >
-            추가
-          </button>
-        </div>
-      </form>
+      <AddTodoForm />
 
       <Suspense fallback={<TodoListFallback />}>
         <TodoList />
@@ -137,55 +96,7 @@ async function TodoList() {
             </form>
           </div>
 
-          <details className="text-sm">
-            <summary className="cursor-pointer text-black/60 hover:underline dark:text-white/60">
-              수정
-            </summary>
-            <form
-              action={updateTodoAction.bind(null, todo.id)}
-              className="mt-2 flex flex-col gap-2"
-            >
-              <input
-                type="text"
-                name="title"
-                defaultValue={todo.title}
-                required
-                className="rounded border border-black/[.08] px-3 py-2 dark:border-white/[.145]"
-              />
-              <input
-                type="text"
-                name="description"
-                defaultValue={todo.description ?? ""}
-                placeholder="설명 (선택)"
-                className="rounded border border-black/[.08] px-3 py-2 dark:border-white/[.145]"
-              />
-              <div className="flex gap-2">
-                <input
-                  type="date"
-                  name="dueDate"
-                  defaultValue={todo.dueDate ?? ""}
-                  aria-label="마감일"
-                  className="flex-1 rounded border border-black/[.08] px-3 py-2 dark:border-white/[.145]"
-                />
-                <select
-                  name="priority"
-                  defaultValue={todo.priority}
-                  aria-label="우선순위"
-                  className="rounded border border-black/[.08] px-3 py-2 dark:border-white/[.145]"
-                >
-                  <option value="low">낮음</option>
-                  <option value="medium">보통</option>
-                  <option value="high">높음</option>
-                </select>
-                <button
-                  type="submit"
-                  className="rounded bg-foreground px-4 py-2 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc]"
-                >
-                  저장
-                </button>
-              </div>
-            </form>
-          </details>
+          <EditTodoForm todo={todo} updateAction={updateTodoAction.bind(null, todo.id)} />
         </li>
       ))}
     </ul>
