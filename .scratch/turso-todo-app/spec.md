@@ -1,6 +1,6 @@
 # Turso 기반 Todo 앱
 
-Status: ready-for-agent
+Status: done
 
 ## Problem Statement
 
