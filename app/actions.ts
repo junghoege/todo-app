@@ -2,9 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { createTodo, deleteTodo, toggleTodo } from "@/lib/todos";
+import { createTodo, deleteTodo, toggleTodo, updateTodo } from "@/lib/todos";
 
-const createTodoSchema = z.object({
+const todoFieldsSchema = {
   title: z.string().trim().min(1),
   description: z
     .string()
@@ -21,7 +21,10 @@ const createTodoSchema = z.object({
     .optional()
     .transform((value) => value ?? null),
   priority: z.enum(["low", "medium", "high"]).default("medium"),
-});
+};
+
+const createTodoSchema = z.object(todoFieldsSchema);
+const updateTodoSchema = z.object(todoFieldsSchema);
 
 export async function createTodoAction(formData: FormData) {
   const parsed = createTodoSchema.safeParse({
@@ -33,6 +36,19 @@ export async function createTodoAction(formData: FormData) {
   if (!parsed.success) return;
 
   await createTodo(parsed.data);
+  revalidatePath("/");
+}
+
+export async function updateTodoAction(id: number, formData: FormData) {
+  const parsed = updateTodoSchema.safeParse({
+    title: formData.get("title"),
+    description: formData.get("description") || null,
+    dueDate: formData.get("dueDate") || null,
+    priority: formData.get("priority") || undefined,
+  });
+  if (!parsed.success) return;
+
+  await updateTodo(id, parsed.data);
   revalidatePath("/");
 }
 
