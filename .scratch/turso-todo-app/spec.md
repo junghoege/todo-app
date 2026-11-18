@@ -1,6 +1,6 @@
 # Turso 기반 Todo 앱
 
-Status: ready-for-agent
+Status: done
 
 ## Problem Statement
 
@@ -51,6 +51,7 @@ Next.js App Router 위에 로그인 없는 단일 사용자용 Todo 리스트를
 
 - 좋은 테스트의 기준: `lib/todos.ts`가 반환하는 데이터(내용, 정렬 순서, 필드 값)만 검증하고, 내부적으로 어떤 SQL이 생성되는지 같은 구현 디테일은 검증하지 않는다.
 - 테스트 대상 모듈: `lib/todos.ts` 하나뿐이다. Server Actions(`app/actions.ts`)와 UI 컴포넌트는 얇은 래퍼로 유지하고 별도로 테스트하지 않는다.
+  - **예외 (ticket 08)**: zod 검증 규칙을 `app/actions.ts`에서 `lib/todo-input.ts`(프레임워크 의존성 없는 순수 zod 스키마 + `firstTodoInputError` 헬퍼)로 추출하면서, 이 모듈도 `lib/todo-input.test.ts`로 직접 테스트한다. 두 번째 테스트 대상 모듈이 생긴 셈이라 위 "하나뿐이다" 원칙과는 어긋나지만, 의도적이고 좁은 예외다: Server Action이 실제로 의존하는 검증 규칙을 `next/cache` 등 Next.js의 요청 스코프 API를 모킹하지 않고도 정확히 검증할 수 있기 때문이다. 이 설계는 되돌리지 않는다.
 - 테스트 DB: `@libsql/client`로 만든 로컬 파일 또는 인메모리 libSQL 인스턴스를 테스트마다 새로 만들고, 프로덕션과 동일한 Drizzle 마이그레이션 파일을 적용한 뒤 그 위에서 `lib/todos.ts` 함수를 직접 호출해 검증한다. DB 클라이언트나 Drizzle 쿼리를 모킹하지 않는다.
 - 프로젝트 내 선례: 없음 (그린필드). 이 기능 구현과 함께 테스트 러너(Vitest 권장 — TypeScript/ESM 기반 Next.js 프로젝트와 궁합이 좋음)를 새로 도입해야 한다.
 
